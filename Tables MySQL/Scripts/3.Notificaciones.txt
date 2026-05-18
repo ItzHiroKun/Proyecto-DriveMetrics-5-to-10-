@@ -1,0 +1,12 @@
+-- Base de datos: notificaciones_db
+CREATE TABLE notificaciones (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    mensaje VARCHAR(500) NOT NULL,
+    tipo VARCHAR(50),
+    destinatario_tipo VARCHAR(20) NOT NULL,
+    destinatario_id BIGINT NOT NULL,
+    estado VARCHAR(20) DEFAULT 'PENDIENTE',
+    fecha_creacion DATETIME DEFAULT CURRENT_TIMESTAMP,
+    fecha_envio DATETIME,
+    referencia VARCHAR(100)
+);

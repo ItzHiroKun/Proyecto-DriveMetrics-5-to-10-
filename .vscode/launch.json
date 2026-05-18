@@ -1,0 +1,20 @@
+{
+    "configurations": [
+        {
+            "type": "java",
+            "name": "NotificacionesMsApplication",
+            "request": "launch",
+            "mainClass": "cl.duoc.notificacionesMS.NotificacionesMsApplication"
+        },
+        {
+            "type": "java",
+            "name": "Spring Boot-CitasMsApplication<citasMS>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "cl.duoc.citasMS.CitasMsApplication",
+            "projectName": "citasMS",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env"
+        }
+    ]
+}
