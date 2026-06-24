@@ -35,4 +35,9 @@ public class Cita {
 
     @Column(name = "vehiculo_id", nullable = false)
     private Long vehiculoId;
+
+    // Se añade la columna cliente_id para asosicar la cita con el cliente
+    @Column(name = "cliente_id", nullable = false)
+    private Long clientId;
+    
 }

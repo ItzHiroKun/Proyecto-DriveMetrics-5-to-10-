@@ -10,6 +10,7 @@ public class ProveedoresMsApplication {
 
 	public static void main(String[] args) {
 		SpringApplication.run(ProveedoresMsApplication.class, args);
+		System.out.println("Running...");
 	}
 
 }

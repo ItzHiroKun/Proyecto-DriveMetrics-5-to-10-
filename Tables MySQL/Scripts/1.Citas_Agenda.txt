@@ -1,9 +1,0 @@
--- Base de datos: citas_db
-CREATE TABLE citas (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    fecha DATE NOT NULL,
-    hora DATETIME NOT NULL,
-    lugar VARCHAR(100),
-    estado VARCHAR(20) DEFAULT 'AGENDADA',
-    vehiculo_id BIGINT NOT NULL
-);

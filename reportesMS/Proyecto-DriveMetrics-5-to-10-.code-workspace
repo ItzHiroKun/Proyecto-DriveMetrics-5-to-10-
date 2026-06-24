@@ -1,0 +1,28 @@
+{
+	"folders": [
+		{
+			"path": "../../../Documents/GitHub/Proyecto-DriveMetrics-5-to-10-"
+		},
+		{
+			"path": "../notificacionesMS"
+		},
+		{
+			"path": "../proveedoresMS"
+		},
+		{
+			"path": "."
+		},
+		{
+			"path": "../Tables MySQL"
+		},
+		{
+			"path": "../citasMS"
+		},
+		{
+			"path": "../facturacionMS"
+		}
+	],
+	"settings": {
+		"java.compile.nullAnalysis.mode": "automatic"
+	}
+}

@@ -1,6 +1,7 @@
 package cl.duoc.facturacionMS.Service;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -25,12 +26,14 @@ public class FacturaService {
     private FacturaRepository facturaRepository;
 
     @Autowired
-    private PagoRepository PagoRepository;
+    private PagoRepository PagoRepository;   // respetamos el nombre que usas
 
     @Autowired
     private OrdenesTrabajoClient ordenClient;
 
-    //Gestión de facturas
+    // -------------------------------------------------------------
+    // Gestión de facturas
+    // -------------------------------------------------------------
 
     public List<Factura> listarFacturas() {
         return facturaRepository.findAll();
@@ -38,38 +41,52 @@ public class FacturaService {
 
     public Factura buscarPorId(Long id) {
         return facturaRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Factura no encontrada"));
+                .orElseThrow(() -> new RuntimeException("Factura no encontrada"));
     }
 
     @Transactional
     public Factura generarFactura(Long ordenId) {
-        //Verificar que la orden no tenga ya una factura
+        // 1. Verificar que la orden exista
         OrdenTrabajoDTO orden = ordenClient.obtenerOrden(ordenId);
-        if (orden == null){
+        if (orden == null) {
             throw new RuntimeException("La orden de trabajo no existe");
         }
 
-        //Verificar que la oden no tenga una factura
+        // 2. Verificar que la orden no tenga ya una factura
         if (!facturaRepository.findByOrdenId(ordenId).isEmpty()) {
             throw new RuntimeException("Esta orden ya tiene una factura generada");
         }
 
-        //Crear la factura tomando montos de la orden
+        // 3. Obtener subtotales desde la orden (asegurando no nulos)
+        BigDecimal subtotalManoObra = orden.getSubtotalManoObra() != null
+                ? orden.getSubtotalManoObra() : BigDecimal.ZERO;
+        BigDecimal subtotalRepuestos = orden.getSubtotalRepuestos() != null
+                ? orden.getSubtotalRepuestos() : BigDecimal.ZERO;
+
+        // 4. Calcular IVA (19%) y total final automáticamente
+        BigDecimal subtotal = subtotalManoObra.add(subtotalRepuestos);
+        BigDecimal iva = subtotal.multiply(new BigDecimal("0.19")).setScale(2, RoundingMode.HALF_UP);
+        BigDecimal totalFinal = subtotal.add(iva);
+
+        // 5. Crear la factura y asignar valores calculados (ignoramos los que trae la orden)
         Factura factura = new Factura();
         factura.setOrdenId(ordenId);
         factura.setFechaEmision(LocalDateTime.now());
-        factura.setSubtotalManoObra(orden.getSubtotalManoObra() != null ?
-            orden.getSubtotalManoObra(): BigDecimal.ZERO);
-        factura.setSubtotalRepuestos(orden.getSubtotalRepuestos() != null ?
-            orden.getSubtotalRepuestos(): BigDecimal.ZERO);
-        factura.setIva(orden.getIva());
-        factura.setTotalFinal(orden.getTotalFinal());
+        factura.setSubtotalManoObra(subtotalManoObra);
+        factura.setSubtotalRepuestos(subtotalRepuestos);
+        factura.setIva(iva);                // calculado automáticamente
+        factura.setTotalFinal(totalFinal);   // calculado automáticamente
 
-        //Generar número de boleta
-        Long maxBoleta = facturaRepository.findAll().stream().mapToLong(Factura::getNumeroBoleta)
-            .max()
-            .orElse(1000);
+        // 6. Generar número de boleta correlativo
+        Long maxBoleta = facturaRepository.findAll()
+                .stream()
+                .mapToLong(Factura::getNumeroBoleta)
+                .max()
+                .orElse(1000);
         factura.setNumeroBoleta(maxBoleta + 1);
+
+        // Si se desea asignar el clienteId desde la orden, descomentar:
+        // factura.setClienteId(orden.getClienteId());
 
         return facturaRepository.save(factura);
     }
@@ -78,13 +95,11 @@ public class FacturaService {
     public FacturaDetalleDTO obtenerDetalle(Long facturaId) {
         Factura factura = buscarPorId(facturaId);
 
-        //Obtener orden de trabajo asociada
         OrdenTrabajoDTO orden = ordenClient.obtenerOrden(factura.getOrdenId());
-        if  (orden == null) {
+        if (orden == null) {
             throw new RuntimeException("No se pudo recuperar la orden asociada");
         }
 
-        // Obtener pagos en esta factura
         List<Pago> pagos = PagoRepository.findByFacturaId(facturaId);
         List<PagoDTO> pagosDTO = pagos.stream().map(p -> {
             PagoDTO dto = new PagoDTO();
@@ -95,7 +110,7 @@ public class FacturaService {
             dto.setReferencia(p.getReferencia());
             return dto;
         }).collect(Collectors.toList());
-        
+
         FacturaDetalleDTO detalle = new FacturaDetalleDTO();
         detalle.setId(factura.getId());
         detalle.setNumeroBoleta(factura.getNumeroBoleta());
@@ -110,19 +125,20 @@ public class FacturaService {
         return detalle;
     }
 
-    //Gestión de pagos
+    // -------------------------------------------------------------
+    // Gestión de pagos
+    // -------------------------------------------------------------
 
     @Transactional
     public Pago registrarPago(Long facturaId, Pago pago) {
         Factura factura = buscarPorId(facturaId);
 
-        //Validar que el monto del pago no supere el total
-
-        BigDecimal totalPagado = PagoRepository.findByFacturaId(facturaId).stream()
-            .map(Pago::getMonto)
-            .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal totalPagado = PagoRepository.findByFacturaId(facturaId)
+                .stream()
+                .map(Pago::getMonto)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
         if (totalPagado.add(pago.getMonto()).compareTo(factura.getTotalFinal()) > 0) {
-            throw new RuntimeException("El pago super el total de la factura");
+            throw new RuntimeException("El pago supera el total de la factura");
         }
 
         pago.setFactura(factura);
@@ -130,7 +146,7 @@ public class FacturaService {
         return PagoRepository.save(pago);
     }
 
-    public List<Pago> listarPagos(Long facturaId){ 
+    public List<Pago> listarPagos(Long facturaId) {
         return PagoRepository.findByFacturaId(facturaId);
     }
 }

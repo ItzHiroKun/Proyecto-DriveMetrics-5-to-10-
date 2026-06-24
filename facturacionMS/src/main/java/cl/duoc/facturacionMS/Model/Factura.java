@@ -37,4 +37,7 @@ public class Factura {
 
     @Column(name = "total_final", nullable = false, precision = 12, scale = 2)
     private BigDecimal totalFinal;
+
+    @Column(name = "cliente_id", nullable = false)
+    private Long clienteId;
 }

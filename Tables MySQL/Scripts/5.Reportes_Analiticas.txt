@@ -1,8 +1,0 @@
--- Base de datos: reportes_db
-CREATE TABLE reportes (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    tipo VARCHAR(50) NOT NULL,
-    fecha_generacion DATETIME DEFAULT CURRENT_TIMESTAMP,
-    parametros VARCHAR(255),
-    resultado TEXT
-);

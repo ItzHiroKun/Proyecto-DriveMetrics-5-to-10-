@@ -10,6 +10,7 @@ public class NotificacionesMsApplication {
 
 	public static void main(String[] args) {
 		SpringApplication.run(NotificacionesMsApplication.class, args);
+		System.out.println("Running...");
 	}
 
 }

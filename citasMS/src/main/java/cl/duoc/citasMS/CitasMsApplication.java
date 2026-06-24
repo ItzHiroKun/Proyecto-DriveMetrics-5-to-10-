@@ -10,6 +10,7 @@ public class CitasMsApplication {
 
 	public static void main(String[] args) {
 		SpringApplication.run(CitasMsApplication.class, args);
+		System.out.println("Running...");
 	}
 
 }
