@@ -50,7 +50,7 @@ class FacturaControllerTest {
         // Se registra módulo para fechas (si tenés LocalDateTime, necesitás jackson-datatype-jsr310 en el pom)
         objectMapper.findAndRegisterModules();
 
-        // Factura de ejemplo
+        // FEjemplo de factura
         facturaEjemplo = new Factura();
         facturaEjemplo.setId(1L);
         facturaEjemplo.setNumeroBoleta(1001L);
